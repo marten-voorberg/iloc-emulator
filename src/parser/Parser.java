@@ -2,10 +2,10 @@ package parser;
 
 import instruction.ArithmeticInstruction;
 import instruction.Instruction;
+import instruction.LoadInstruction;
 import program.Program;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Optional;
 
@@ -36,7 +36,10 @@ public class Parser {
     private Instruction parseLine(String line) throws ParseException {
         String[] parts = line.split(" ");
 
-        return parseArithmeticInstruction(parts).get();
+        Instruction result = null;
+        result = parseLoadInstruction(parts);
+        System.out.println(result);
+        return result;
     }
 
     private Optional<Instruction> parseArithmeticInstruction(String[] parts) throws ParseException {
@@ -81,7 +84,7 @@ public class Parser {
         Instruction.SourceType sourceType;
         if (parts[2].charAt(0) == 'r') {
             sourceType = Instruction.SourceType.Register;
-            parts[2] = parts[3].substring(1);
+            parts[2] = parts[2].substring(1);
         } else {
             sourceType = Instruction.SourceType.Constant;
         }
@@ -97,7 +100,59 @@ public class Parser {
 
         Instruction result = new ArithmeticInstruction(operation, parameter1, parameter2,
             parameter3, sourceType);
+        System.out.println(result);
         return Optional.of(result);
+    }
+
+    private Instruction parseLoadInstruction(String[] parts) throws ParseException {
+        final String INSTRUCTION_WORD = "load";
+        String keyword = parts[0].toLowerCase();
+
+        // Check if the keyword contains at least 4 letters and those match the INSTRUCTION_WORD
+        if (keyword.length() < INSTRUCTION_WORD.length() ||
+            !keyword.substring(0, 4).toLowerCase().equals(INSTRUCTION_WORD)) {
+            return null;
+        }
+
+        if (keyword.length() == INSTRUCTION_WORD.length()) {
+            if (parts.length != 3) {
+                throw new ParseException("Load instruction should have 2 parameters");
+            }
+
+            if (parts[1].charAt(0) != 'r' || parts[2].charAt(0) != 'r') {
+                throw new ParseException("Load instruction parameters should be registers");
+            }
+            int source;
+            int target;
+            try {
+                source = Integer.valueOf(parts[1].substring(1));
+                target = Integer.valueOf(parts[2].substring(1));
+            } catch (NumberFormatException e) {
+                throw new ParseException("Parameters are not valid registers");
+            }
+
+            return new LoadInstruction(source, target, Instruction.SourceType.Register);
+        } else if (keyword.length() == INSTRUCTION_WORD.length() + 1) {
+            if (keyword.charAt(INSTRUCTION_WORD.length()) != 'i') {
+                throw new ParseException("Expected loadI instruction.");
+            }
+
+            if (parts[2].charAt(0) != 'r') {
+                throw new ParseException("Load instruction target should be a register");
+            }
+
+            int source;
+            int target;
+            try {
+                source = Integer.valueOf(parts[1]);
+                target = Integer.valueOf(parts[2].substring(1));
+            } catch (NumberFormatException e) {
+                throw new ParseException("Parameters are not valid registers");
+            }
+
+            return new LoadInstruction(source, target, Instruction.SourceType.Constant);
+        }
+        return null;
     }
 
     public Program getProgram() {

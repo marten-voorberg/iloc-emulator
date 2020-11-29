@@ -50,7 +50,12 @@ public class ArithmeticInstruction implements Instruction {
     }
 
     @Override
-    public void execute(Emulator emulator) {
-
+    public String toString() {
+        StringBuilder secondRegister = new StringBuilder();
+        if (source2Type == SourceType.Register) {
+            secondRegister.append('r');
+        }
+        return String.format("%s r%s %s%s r%s", operation, source1Register, secondRegister,
+            source2, targetRegister);
     }
 }

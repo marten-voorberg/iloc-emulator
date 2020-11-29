@@ -1,2 +1,4 @@
 addI r1 10 r1
 add r1 r1 r1
+load r1 r1
+loadI 10 r1
